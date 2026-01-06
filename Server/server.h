@@ -4,22 +4,47 @@
 #include<QTcpSocket>
 #include<QVector>
 #include<QTime>
+#include <QMap>
+#include <QSet>
+#include "player.h"
 
 class server: public QTcpServer
 {
     Q_OBJECT
 private:
-    QVector<QTcpSocket*> Sockets;
-    QByteArray Data;
-    void SendToClient(QString username, QString str);
+    QMap<QTcpSocket*, player*> players;
+    QByteArray data;
     qint16 DataSize;
+
+    QString gameStatus; // "WAITING", "PLACING_SHIPS", "PLAYER1_TURN", "PLAYER2_TURN", "GAME_OVER"
+    QString currentPlayerUsername;
+    int connectedPlayers;
+
+    void sendToClient(QTcpSocket* socket, const QString& command, const QString& data = "");
+    void broadcast(const QString& command, const QString& data = "");
+    void processMessage(QTcpSocket* client, const QString& message);
+    void handleGameCommand(QTcpSocket* client, const QString& command, const QString& data);
+
+    void checkGameOver();
+    QString getPlayerStats(player* player);
+    void switchTurn();
+    bool isValidShipPlacement(const QSet<QPair<int, int>>& ships);
+    bool areAllShipsPlaced();
+    void startGame();
+    void endGame(player* winner);
+    player* getPlayerByUsername(const QString& username);
+    player* getOpponent(player* player);
 
 public:
     server();
-    //QTcpSocket *socket;
+    ~server();
+
+protected:
+    void incomingConnection(qintptr socketDescriptor) override;
+
 public slots:
-    void incomingConnection(qintptr SoketDescription);
     void SlotReadyRead();
+    void slotDisconnected();
 
 };
 
