@@ -1,0 +1,72 @@
+# Qt Creator специфика
+*.autosave
+.qmake.stash
+*.pro.user
+*.pro.user.*
+
+# Кеш Qt Creator и CLion
+.qtc_clangd/
+.qtc/
+
+# Папки сборки
+build/
+build-*/
+Debug/
+Release/
+
+# Промежуточные файлы компиляции
+*.o
+*.obj
+*.patch
+
+# Qt мета-файлы
+moc_*.cpp
+moc_*.h
+ui_*.h
+qrc_*.cpp
+*.qm
+Makefile*
+Makefile
+
+# Исполняемые файлы и библиотеки
+*.exe
+*.app
+*.dll
+*.so
+*.so.*
+*.dylib
+*.a
+*.lib
+
+# Отладочные файлы
+*.pdb
+*.idb
+*.ilk
+*.exp
+
+# QML кеш
+*.qmlc
+*.jsc
+
+# Временные файлы
+*~
+*.bak
+*.tmp
+*.temp
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+
+# IDE папки
+.vscode/
+.idea/
+*.sln
+*.vcxproj*
+*.cbp
+*.workspace
+
+# CMake папки (если используете)
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
