@@ -336,7 +336,7 @@ void server::slotDisconnected() {
 }
 
 bool server::isValidShipPlacement(const QSet<QPair<int, int>>& ships) {
-    if (ships.size() != 10) {
+    if (ships.size() != 20) {
         qDebug() << "Invalid number of ships:" << ships.size();
         return false;
     }

@@ -20,7 +20,6 @@ player::player(QTcpSocket* socket)
 {
 }
 
-// Геттеры
 QString player::getUsername() const {
     return username;
 }

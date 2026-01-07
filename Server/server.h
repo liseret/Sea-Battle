@@ -16,7 +16,7 @@ private:
     QByteArray data;
     qint16 DataSize;
 
-    QString gameStatus; // "WAITING", "PLACING_SHIPS", "PLAYER1_TURN", "PLAYER2_TURN", "GAME_OVER"
+    QString gameStatus;
     QString currentPlayerUsername;
     int connectedPlayers;
 
