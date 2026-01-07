@@ -345,48 +345,6 @@ bool server::isValidShipPlacement(const QSet<QPair<int, int>>& ships) {
             return false;
         }
     }
-
-    QSet<QPair<int, int>> remainingCells = ships;
-    QVector<int> shipSizes;
-
-    while (!remainingCells.isEmpty()) {
-        auto start = *remainingCells.begin();
-        remainingCells.remove(start);
-        int size = 1;
-        bool horizontal = true;
-        int tempSize = 1;
-        for (int i = 1; i < 4; i++) {
-            QPair<int, int> next = qMakePair(start.first, start.second + i);
-            if (ships.contains(next)) {
-                tempSize++;
-                remainingCells.remove(next);
-            } else {
-                break;
-            }
-        }
-        if (tempSize == 1) {
-            for (int i = 1; i < 4; i++) {
-                QPair<int, int> next = qMakePair(start.first + i, start.second);
-                if (ships.contains(next)) {
-                    tempSize++;
-                    remainingCells.remove(next);
-                } else {
-                    break;
-                }
-            }
-        }
-
-        size = tempSize;
-        shipSizes.append(size);
-    }
-    std::sort(shipSizes.begin(), shipSizes.end(), std::greater<int>());
-    QVector<int> requiredSizes = {4, 3, 3, 2, 2, 2, 1, 1, 1, 1};
-
-    if (shipSizes != requiredSizes) {
-        qDebug() << "Invalid ship sizes. Got:" << shipSizes;
-        return false;
-    }
-
     return true;
 }
 

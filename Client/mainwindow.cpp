@@ -1,24 +1,26 @@
 #include "mainwindow.h"
 #include <QJsonArray>
 #include <QJsonObject>
+#include "shipvalidator.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
+    this->setWindowTitle("Sea Battle");
     QWidget *central = new QWidget;
     setCentralWidget(central);
     QHBoxLayout *mainLayout = new QHBoxLayout(central);
 
     QVBoxLayout *uiLayout = new QVBoxLayout();
-    nameEdit = new QLineEdit("Игрок");
+    nameEdit = new QLineEdit("Player");
     ipEdit = new QLineEdit("127.0.0.1");
-    btnConnect = new QPushButton("Подключиться");
-    btnReady = new QPushButton("Готово (Корабли)");
+    btnConnect = new QPushButton("Connect");
+    btnReady = new QPushButton("Ready");
     btnReady->setEnabled(false);
     log = new QTextEdit();
     log->setReadOnly(true);
-    statusLabel = new QLabel("Статус: Ожидание");
+    statusLabel = new QLabel("Status: wating");
 
-    uiLayout->addWidget(new QLabel("Имя:")); uiLayout->addWidget(nameEdit);
+    uiLayout->addWidget(new QLabel("Name:")); uiLayout->addWidget(nameEdit);
     uiLayout->addWidget(new QLabel("IP:")); uiLayout->addWidget(ipEdit);
     uiLayout->addWidget(btnConnect);
     uiLayout->addWidget(btnReady);
@@ -39,16 +41,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(enemyField, &GameField::cellClicked, this, &MainWindow::onShot);
 
     connect(client, &ClientManager::statusChanged, [this](QString s){
-        statusLabel->setText("Статус: " + s);
+        statusLabel->setText("Status: " + s);
         if(s == "PLACING_SHIPS") {
             myField->setInteractive(true);
             btnReady->setEnabled(true);
+            log->append("Place your ships: 1x4, 2x3, 3x2, 4x1");
         }
     });
     connect(client, &ClientManager::messageReceived, log, &QTextEdit::append);
     connect(client, &ClientManager::turnChanged, [this](QString p){
         myTurn = (p == nameEdit->text());
-        log->append(myTurn ? "--- ВАШ ХОД ---" : "--- ХОД ПРОТИВНИКА ---");
+        log->append(myTurn ? "=== YOUR TURN ===" : "=== OPPONENT TURN ===");
         enemyField->setInteractive(myTurn);
     });
     connect(client, &ClientManager::shotResult, [this](int x, int y, bool hit, bool sunk){
@@ -65,9 +68,16 @@ void MainWindow::onConnect() {
 }
 
 void MainWindow::onReady() {
-    auto ships = myField->getSelectedCells();
+    auto cells = myField->getSelectedCells();
+    ShipValidator::Result res = ShipValidator::validateFullMap(cells);
+
+    if (!res.success) {
+        log->append("<font color='red'>Error: " + res.message + "</font>");
+        return;
+    }
+
     QJsonArray arr;
-    for(auto p : ships) {
+    for(auto p : cells) {
         QJsonObject cell;
         cell["x"] = p.first; cell["y"] = p.second;
         arr.append(cell);
@@ -75,6 +85,7 @@ void MainWindow::onReady() {
     client->sendCommand("SHIPS_PLACED", arr);
     myField->setInteractive(false);
     btnReady->setEnabled(false);
+    log->append("<font color='green'>Fleet deployed! Waiting for opponent...</font>");
 }
 
 void MainWindow::onShot(int x, int y) {

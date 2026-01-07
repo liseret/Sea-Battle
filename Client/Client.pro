@@ -12,12 +12,14 @@ SOURCES += \
     clientmanager.cpp \
     gamefield.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    shipvalidator.cpp
 
 HEADERS += \
     clientmanager.h \
     gamefield.h \
-    mainwindow.h
+    mainwindow.h \
+    shipvalidator.h
 
 FORMS += \
     mainwindow.ui
