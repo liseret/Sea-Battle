@@ -1,8 +1,18 @@
 #include "clientmanager.h"
+#include <QDebug>
 
-ClientManager::ClientManager(QObject *parent) : QObject(parent) {
+              ClientManager::ClientManager(QObject *parent) : QObject(parent) {
     socket = new QTcpSocket(this);
     connect(socket, &QTcpSocket::readyRead, this, &ClientManager::onReadyRead);
+
+    connect(socket, &QTcpSocket::connected, [this]() {
+        qDebug() << "Connected to server";
+    });
+
+    connect(socket, &QTcpSocket::errorOccurred, [this](QAbstractSocket::SocketError error) {
+        qDebug() << "Socket error:" << error << socket->errorString();
+        emit errorOccurred(socket->errorString());
+    });
 }
 
 void ClientManager::connectToServer(const QString &host, quint16 port, const QString &name) {
@@ -13,7 +23,10 @@ void ClientManager::connectToServer(const QString &host, quint16 port, const QSt
 }
 
 void ClientManager::sendCommand(const QString &command, const QJsonValue &data) {
-    if (socket->state() != QAbstractSocket::ConnectedState) return;
+    if (socket->state() != QAbstractSocket::ConnectedState) {
+        qDebug() << "Cannot send command: socket not connected";
+        return;
+    }
 
     QJsonObject obj;
     obj["command"] = command;
@@ -30,7 +43,10 @@ void ClientManager::sendCommand(const QString &command, const QJsonValue &data) 
     out.device()->seek(0);
     out << quint16(block.size() - sizeof(quint16));
 
-    socket->write(block);
+    qint64 bytesWritten = socket->write(block);
+    if (bytesWritten == -1) {
+        qDebug() << "Failed to write to socket";
+    }
 }
 
 void ClientManager::onReadyRead() {
@@ -52,15 +68,30 @@ void ClientManager::onReadyRead() {
 }
 
 void ClientManager::processMessage(const QString &message) {
+    qDebug() << "Received message:" << message;
+
     QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8());
+    if (doc.isNull()) {
+        qDebug() << "Invalid JSON received";
+        return;
+    }
+
     QJsonObject obj = doc.object();
     QString cmd = obj["command"].toString();
     QString data = obj["data"].toString();
 
-    if (cmd == "STATUS") emit statusChanged(data);
+    qDebug() << "Command:" << cmd << "Data:" << data;
+
+    if (cmd == "CONNECTED") emit messageReceived("Connected to server");
+    else if (cmd == "STATUS") emit statusChanged(data);
     else if (cmd == "MESSAGE") emit messageReceived(data);
     else if (cmd == "GAME_START") emit gameStarted(data);
     else if (cmd == "TURN_CHANGE") emit turnChanged(data);
+    else if (cmd == "SHIP_SUNK") emit shipSunk(data);
+    else if (cmd == "SHIPS_ACCEPTED") emit messageReceived("Ships placement accepted!");
+    else if (cmd == "PLAYER_READY") emit messageReceived(data);
+    else if (cmd == "PLAYER_JOINED") emit messageReceived("Player joined: " + data);
+    else if (cmd == "PLAYER_LEFT") emit messageReceived("Player left: " + data);
     else if (cmd == "SHOT_RESULT") {
         QJsonObject res = QJsonDocument::fromJson(data.toUtf8()).object();
         emit shotResult(res["x"].toInt(), res["y"].toInt(), res["hit"].toBool(), res["sunk"].toBool());
@@ -69,8 +100,13 @@ void ClientManager::processMessage(const QString &message) {
         QJsonObject res = QJsonDocument::fromJson(data.toUtf8()).object();
         emit enemyShot(res["x"].toInt(), res["y"].toInt(), res["hit"].toBool(), res["sunk"].toBool());
     }
-    else if (cmd == "SHIP_SUNK") emit shipSunk(data);
-    else if (cmd == "GAME_OVER") emit messageReceived("Победа: " + data);
+    else if (cmd == "GAME_OVER") {
+        emit gameOver(data, "");
+        emit messageReceived("Game Over: " + data);
+    }
     else if (cmd == "STATS") emit gameOver("", data);
     else if (cmd == "ERROR") emit errorOccurred(data);
+    else {
+        qDebug() << "Unknown command:" << cmd;
+    }
 }
