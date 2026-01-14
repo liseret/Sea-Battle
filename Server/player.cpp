@@ -130,7 +130,7 @@ void player::resetGameStats() {
     receivedHits.clear();
     shotsFired = 0;
     shotsHit = 0;
-    shipsRemaining = ships.size();
+    sunkShipsCount = 0;
     ready = false;
 }
 

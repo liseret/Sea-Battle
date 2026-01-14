@@ -39,6 +39,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     mainLayout->addWidget(enemyField);
 
     client = new ClientManager(this);
+    shotsMade.clear();
 
     connect(btnConnect, &QPushButton::clicked, this, &MainWindow::onConnect);
     connect(btnReady, &QPushButton::clicked, this, &MainWindow::onReady);
@@ -61,6 +62,7 @@ void MainWindow::onStatusChanged(const QString &status) {
         myField->setInteractive(true);
         enemyField->setInteractive(false);
         btnReady->setEnabled(true);
+        shotsMade.clear();
         log->append("Place your ships: 1x4, 2x3, 3x2, 4x1");
     }
     else if (status == "PLAYER1_TURN" || status == "PLAYER2_TURN") {
@@ -88,6 +90,7 @@ void MainWindow::onTurnChanged(const QString &currentPlayer) {
 
 void MainWindow::onShotResult(int x, int y, bool hit, bool sunk) {
     qDebug() << "Shot result:" << x << y << "hit:" << hit << "sunk:" << sunk;
+    shotsMade.insert(qMakePair(x, y));
 
     if (hit) {
         enemyField->setCell(x, y, GameField::Hit);
@@ -97,7 +100,8 @@ void MainWindow::onShotResult(int x, int y, bool hit, bool sunk) {
             log->append(QString("Hit at (%1, %2)!").arg(x).arg(y));
         }
         enemyField->setInteractive(true);
-    } else {
+    }
+    else {
         enemyField->setCell(x, y, GameField::Miss);
         log->append(QString("Miss at (%1, %2).").arg(x).arg(y));
         enemyField->setInteractive(false);
@@ -124,29 +128,32 @@ void MainWindow::onGameStarted(const QString &info) {
     log->append("Game started! " + info);
     myField->setInteractive(false);
     enemyField->setInteractive(false);
+    shotsMade.clear();
 }
 
 void MainWindow::onGameOver(const QString &winner, const QString &stats) {
     myTurn = false;
     enemyField->setInteractive(false);
     myField->setInteractive(false);
+    shotsMade.clear();
 
-    statusLabel->setText("Игра окончена!");
+    statusLabel->setText("===GAME OVER===");
     QMessageBox msgBox(this);
-    msgBox.setWindowTitle("Конец игры");
+    msgBox.setWindowTitle("Sea Battle");
     msgBox.setIcon(QMessageBox::Information);
 
     if (winner == nameEdit->text()) {
-        msgBox.setText("<h2>Поздравляем! Вы победили!</h2>");
-    } else {
-        msgBox.setText(QString("<h2>Победил игрок %1</h2>").arg(winner));
+        msgBox.setText("<h2>Congratulations! You`ve won!</h2>");
+    }
+    else {
+        msgBox.setText(QString("<h2> Winner -  %1</h2>").arg(winner));
     }
 
     msgBox.setInformativeText(stats);
     msgBox.setStandardButtons(QMessageBox::Ok);
     msgBox.exec();
 
-    log->append("<b>Игра окончена. Победитель: " + winner + "</b>");
+    log->append("<b>Game over. Winner -  " + winner + "</b>");
     btnConnect->setEnabled(true);
 }
 
@@ -171,6 +178,9 @@ void MainWindow::onConnect() {
     client->connectToServer(ip, 777, name);
     btnConnect->setEnabled(false);
     log->append("Connecting to server at " + ip + "...");
+    myField->clear();
+    enemyField->clear();
+    shotsMade.clear();
 }
 
 void MainWindow::onReady() {
@@ -202,10 +212,15 @@ void MainWindow::onShot(int x, int y) {
         log->append("<font color='orange'>Not your turn! Wait for your turn.</font>");
         return;
     }
+    if (shotsMade.contains(qMakePair(x, y))) {
+        qDebug() << "Already shot at:" << x << y << "- ignoring";
+        return;
+    }
+
 
     qDebug() << "Sending shot at:" << x << y;
     enemyField->setInteractive(false);
-
+    shotsMade.insert(qMakePair(x, y));
     QJsonObject shot;
     shot["x"] = x;
     shot["y"] = y;

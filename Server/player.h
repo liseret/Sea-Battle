@@ -16,10 +16,12 @@ private:
     int shotsFired;
     int shotsHit;
     bool ready;
+    int sunkShipsCount = 0;
 public:
     player();
     player(QTcpSocket* socket);
-
+    void incrementSunkShips() { sunkShipsCount++; }
+    int getSunkShips() const { return sunkShipsCount; }
     QString getUsername() const;
     QTcpSocket* getSocket() const;
     QSet<QPair<int, int>> getShips() const;

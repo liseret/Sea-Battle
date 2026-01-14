@@ -36,6 +36,7 @@ private:
     QPushButton *btnConnect, *btnReady;
     QLabel *statusLabel;
     bool myTurn = false;
+    QSet<QPair<int, int>> shotsMade;
 };
 
 #endif // MAINWINDOW_H

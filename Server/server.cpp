@@ -93,199 +93,7 @@ void server::processMessage(QTcpSocket* client, const QString& message) {
 }
 
 void server::handleGameCommand(QTcpSocket* client, const QString& command, const QString& data) {
-    // player* Player = players.value(client, nullptr);
-    // if (!Player) {
-    //     return;
-    // }
 
-    // if (command == "USERNAME") {
-    //     Player->setUsername(data);
-    //     qDebug() << "Player set username:" << data;
-
-    //     broadcast("PLAYER_JOINED", data);
-
-    //     if (connectedPlayers == 2) {
-    //         QStringList playerList;
-    //         for (auto p : players.values()) {
-    //             if (!p->getUsername().isEmpty()) {
-    //                 playerList << p->getUsername();
-    //             }
-    //         }
-    //         broadcast("PLAYERS_LIST", playerList.join(","));
-    //     }
-
-    // }
-    // else if (command == "SHIPS_PLACED") {
-    //     if (gameStatus != "PLACING_SHIPS") {
-    //         sendToClient(client, "ERROR", "Cannot place ships now");
-    //         return;
-    //     }
-
-    //     if (Player->isReady()) {
-    //         sendToClient(client, "ERROR", "Ships already placed");
-    //         return;
-    //     }
-
-    //     QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8());
-    //     QJsonArray shipsArray = doc.array();
-
-    //     if (!Player->setShipsFromJson(shipsArray)) {
-    //         sendToClient(client, "ERROR", "Invalid ships data");
-    //         return;
-    //     }
-
-
-    //     if (!isValidShipPlacement(Player->getShips())) {
-    //         sendToClient(client, "ERROR", "Invalid ships placement");
-    //         Player->clearShips();
-    //         return;
-    //     }
-
-    //     Player->setReady(true);
-    //     sendToClient(client, "SHIPS_ACCEPTED");
-    //     broadcast("PLAYER_READY", Player->getUsername() + " placed ships");
-    //     if (areAllShipsPlaced()) {
-    //         startGame();
-    //     }
-
-    // }
-    // else if (command == "SHOT") {
-    //     if (gameStatus != "PLAYER1_TURN" && gameStatus != "PLAYER2_TURN") {
-    //         sendToClient(client, "ERROR", "Not your turn or game not started");
-    //         return;
-    //     }
-    //     player* currentPlayer = getPlayerByUsername(currentPlayerUsername);
-    //     if (!currentPlayer) {
-    //         sendToClient(client, "ERROR", "Game error: current player not found");
-    //         return;
-    //     }
-    //     if (Player != currentPlayer) {
-    //         sendToClient(client, "ERROR", "Not your turn");
-    //         return;
-    //     }
-
-    //     QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8());
-    //     QJsonObject shotObj = doc.object();
-    //     int x = shotObj["x"].toInt();
-    //     int y = shotObj["y"].toInt();
-
-    //     if (x < 0 || x >= 10 || y < 0 || y >= 10) {
-    //         sendToClient(client, "ERROR", "Invalid coordinates");
-    //         return;
-    //     }
-
-    //     if (Player->hasShotAt(x, y)) {
-    //         sendToClient(client, "ERROR", "Already shot at this position");
-    //         return;
-    //     }
-
-    //     Player->incrementShotsFired();
-
-    //     player* Opponent = getOpponent(Player);
-    //     if (!Opponent) {
-    //         sendToClient(client, "ERROR", "Opponent not found");
-    //         return;
-    //     }
-
-    //     if (Opponent->hasShipAt(x, y) && !Opponent->hasReceivedHitAt(x, y)) {
-    //         Player->incrementShotsHit();
-    //         Player->addHit(x, y);
-    //         Opponent->addReceivedHit(x, y);
-
-    //         bool shipSunk = true;
-    //         QSet<QPair<int, int>> shipCells;
-    //         QList<QPair<int, int>> queue;
-    //         queue.append(qMakePair(x, y));
-
-    //         while (!queue.isEmpty()) {
-    //             QPair<int, int> cell = queue.takeFirst();
-    //             shipCells.insert(cell);
-    //             QList<QPair<int, int>> directions = {
-    //                 qMakePair(0, 1), qMakePair(0, -1),
-    //                 qMakePair(1, 0), qMakePair(-1, 0)
-    //             };
-
-    //             for (const auto& dir : directions) {
-    //                 int nx = cell.first + dir.first;
-    //                 int ny = cell.second + dir.second;
-    //                 QPair<int, int> neighbor = qMakePair(nx, ny);
-
-    //                 if (nx >= 0 && nx < 10 && ny >= 0 && ny < 10) {
-    //                     if (Opponent->hasShipAt(nx, ny) && !shipCells.contains(neighbor)) {
-    //                         queue.append(neighbor);
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //         for (const auto& cell : shipCells) {
-    //             if (!Opponent->hasReceivedHitAt(cell.first, cell.second)) {
-    //                 shipSunk = false;
-    //                 break;
-    //             }
-    //         }
-
-    //         QJsonObject result;
-    //         result["x"] = x;
-    //         result["y"] = y;
-    //         result["hit"] = true;
-    //         result["sunk"] = shipSunk;
-
-    //         QJsonDocument resultDoc(result);
-    //         sendToClient(client, "SHOT_RESULT", resultDoc.toJson());
-    //         sendToClient(Opponent->getSocket(), "ENEMY_SHOT", resultDoc.toJson());
-
-    //         if (shipSunk) {
-    //             Opponent->decrementShipsRemaining();
-    //             broadcast("SHIP_SUNK", QString("%1 потопил корабль игрока %2!").arg(Player->getUsername()).arg(Opponent->getUsername()));
-    //             if (Opponent->getShipsRemaining() <= 0) {
-    //                 endGame(Player);
-    //                 return;
-    //             }
-    //         }
-
-    //         broadcast("MESSAGE", QString("%1 hit at (%2, %3)").arg(Player->getUsername()).arg(x).arg(y));
-    //     }
-    //     else {
-    //         Player->addMiss(x, y);
-
-    //         QJsonObject result;
-    //         result["x"] = x;
-    //         result["y"] = y;
-    //         result["hit"] = false;
-
-    //         QJsonDocument resultDoc(result);
-    //         sendToClient(client, "SHOT_RESULT", resultDoc.toJson());
-    //         sendToClient(Opponent->getSocket(), "ENEMY_SHOT", resultDoc.toJson());
-    //         switchTurn();
-
-    //         broadcast("MESSAGE", QString("%1 missed at (%2, %3)").arg(Player->getUsername()).arg(x).arg(y));
-    //     }
-
-    // } else if (command == "READY") {
-    //     if (gameStatus == "PLACING_SHIPS") {
-    //         Player->setReady(true);
-    //         broadcast("PLAYER_READY", Player->getUsername() + " is ready");
-
-    //         if (areAllShipsPlaced()) {
-    //             startGame();
-    //         }
-    //     }
-
-    // } else if (command == "RESTART") {
-    //     if (gameStatus == "GAME_OVER") {
-    //         for (auto p : players.values()) {
-    //             p->resetGameStats();
-    //             p->setReady(false);
-    //         }
-
-    //         gameStatus = "PLACING_SHIPS";
-    //         currentPlayerUsername.clear();
-
-    //         broadcast("GAME_RESTART");
-    //         broadcast("STATUS", "PLACING_SHIPS");
-    //         broadcast("MESSAGE", "Game restarted. Place your ships.");
-    //     }
-    // }
     player* Player = players.value(client, nullptr);
     if (!Player) return;
     if (command == "USERNAME") {
@@ -303,7 +111,7 @@ void server::handleGameCommand(QTcpSocket* client, const QString& command, const
     }
     else if (command == "SHIPS_PLACED") {
         if (gameStatus != "PLACING_SHIPS") {
-            sendToClient(client, "ERROR", "Сейчас нельзя расставлять корабли");
+            sendToClient(client, "ERROR", "Cannot place ships now");
             return;
         }
 
@@ -311,19 +119,19 @@ void server::handleGameCommand(QTcpSocket* client, const QString& command, const
         QJsonArray shipsArray = doc.array();
 
         if (!Player->setShipsFromJson(shipsArray)) {
-            sendToClient(client, "ERROR", "Неверные данные кораблей");
+            sendToClient(client, "ERROR", "Invalid ship data");
             return;
         }
 
         if (!isValidShipPlacement(Player->getShips())) {
-            sendToClient(client, "ERROR", "Неправильная расстановка");
+            sendToClient(client, "ERROR", "Invalid placement");
             Player->clearShips();
             return;
         }
 
         Player->setReady(true);
         sendToClient(client, "SHIPS_ACCEPTED");
-        broadcast("PLAYER_READY", Player->getUsername() + " готов к бою!");
+        broadcast("PLAYER_READY", Player->getUsername() + " ready for battle!");
 
         if (areAllShipsPlaced()) {
             startGame();
@@ -331,12 +139,12 @@ void server::handleGameCommand(QTcpSocket* client, const QString& command, const
     }
     else if (command == "SHOT") {
         if (gameStatus != "PLAYER1_TURN" && gameStatus != "PLAYER2_TURN") {
-            sendToClient(client, "ERROR", "Игра еще не началась или уже закончена");
+            sendToClient(client, "ERROR", "Game has not started yet or is already over");
             return;
         }
 
         if (Player->getUsername() != currentPlayerUsername) {
-            sendToClient(client, "ERROR", "Сейчас не ваш ход!");
+            sendToClient(client, "ERROR", "Not your turn now!");
             return;
         }
 
@@ -392,7 +200,8 @@ void server::handleGameCommand(QTcpSocket* client, const QString& command, const
 
             if (shipSunk) {
                 Opponent->decrementShipsRemaining();
-                broadcast("SHIP_SUNK", QString("Корабль игрока %1 потоплен!").arg(Opponent->getUsername()));
+                Player->incrementSunkShips();
+                broadcast("SHIP_SUNK", QString("Player`s ship %1 sunk!").arg(Opponent->getUsername()));
             }
             if (Opponent->getReceivedHits().size() >= 20) {
                 endGame(Player);
@@ -517,17 +326,7 @@ void server::startGame() {
 }
 
 void server::endGame(player* winner) {
-    // gameStatus = "GAME_OVER";
-    // player* p1 = players.values().at(0);
-    // player* p2 = (players.size() > 1) ? players.values().at(1) : nullptr;
 
-    // QString finalStats = QString("WINNER:%1|STATS:").arg(winner->getUsername());
-    // finalStats += getPlayerStats(p1);
-    // if (p2) {
-    //     finalStats += "\n" + getPlayerStats(p2);
-    // }
-    // broadcast("STATUS", "GAME_OVER");
-    // broadcast("GAME_OVER", finalStats);
 
     gameStatus = "GAME_OVER";
     QString statsData;
@@ -535,18 +334,21 @@ void server::endGame(player* winner) {
         int total = p->getShotsFired();
         int hits = p->getShotsHit();
         double acc = (total > 0) ? (static_cast<double>(hits)/total * 100.0) : 0.0;
+        int sunk = p->getSunkShips();
 
         statsData += QString("<b>Player %1:</b><br>").arg(p->getUsername());
         statsData += QString("Shots were fired: %1<br>").arg(total);
         statsData += QString("Hits: %1<br>").arg(hits);
         statsData += QString("Misses: %1<br>").arg(total - hits);
         statsData += QString("Accuracy: %1%<br><br>").arg(QString::number(acc, 'f', 1));
+        statsData += QString("Ships sunk: <b>%1</b> out of 10<br>").arg(sunk);
     }
 
     QString finalMessage = QString("WINNER:%1|STATS:%2").arg(winner->getUsername()).arg(statsData);
 
     broadcast("STATUS", "GAME_OVER");
     broadcast("GAME_OVER", finalMessage);
+    qDebug() << "WINNER->" << winner->getUsername();
 }
 
 player* server::getPlayerByUsername(const QString& username) {
@@ -590,36 +392,27 @@ void server::switchTurn() {
 }
 
 QString server::getPlayerStats(player* p) {
-    // player* opponent = getOpponent(p);
 
-    // int shots = p->getShotsFired();
-    // int hits = p->getShotsHit();
-    // int misses = shots - hits;
-    // float accuracy = (shots > 0) ? (static_cast<float>(hits) / shots * 100.0f) : 0.0f;
-
-    // QString stats = QString("Игрок: %1\n").arg(p->getUsername());
-    // stats += QString("Выстрелов: %1\n").arg(shots);
-    // stats += QString("Попаданий: %1\n").arg(hits);
-    // stats += QString("Промахов: %1\n").arg(misses);
-    // stats += QString("Точность: %1%\n").arg(QString::number(accuracy, 'f', 1));
-
-    // // Считаем сколько кораблей оппонента имеют статус "все клетки подбиты"
-    // int sunkCount = 0;
-
-    // return stats;
     int shots = p->getShotsFired();
     int hits = p->getShotsHit();
     int misses = shots - hits;
-    double accuracy = (shots > 0) ? (static_cast<double>(hits) / shots * 100.0) : 0.0;
-    player* opponent = getOpponent(p);
-    int sunkShips = 10 - opponent->getShipsRemaining();
+    double accuracy;
+    if (shots > 0) {
+        accuracy = static_cast<double>(hits) / shots * 100.0;
+    }
+    else {
+        accuracy = 0.0;
+    }
+    // player* opponent = getOpponent(p);
+    // int sunkShips = 10 - opponent->getShipsRemaining();
+    int sunk = p->getSunkShips();
 
-    QString stats = QString("Игрок: %1\n").arg(p->getUsername());
-    stats += QString("• Выстрелов: %1\n").arg(shots);
-    stats += QString("• Попаданий: %1\n").arg(hits);
-    stats += QString("• Промахов: %1\n").arg(misses);
-    stats += QString("• Точность: %1%\n").arg(QString::number(accuracy, 'f', 1));
-    stats += QString("• Потоплено кораблей: %1\n").arg(sunkShips);
+    QString stats = QString("Player: %1\n").arg(p->getUsername());
+    stats += QString("Shots: %1\n").arg(shots);
+    stats += QString("Hits: %1\n").arg(hits);
+    stats += QString("Misses: %1\n").arg(misses);
+    stats += QString("Accuracy: %1%\n").arg(QString::number(accuracy, 'f', 1));
+    stats += QString("Ships sunk: <b>%1</b> out of 10<br>").arg(sunk);
     return stats;
 
 }
