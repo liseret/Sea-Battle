@@ -11,12 +11,9 @@ public:
         bool success;
         QString message;
     };
-
-    // Главный метод для проверки всей карты
     static Result validateFullMap(const QSet<QPair<int, int>>& cells);
 
 private:
-    // Вспомогательные методы (скрыты от других классов)
     static bool isLinear(const QVector<QPair<int, int>>& ship);
     static bool checkShipCounts(const QVector<int>& lengths);
 };

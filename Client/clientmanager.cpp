@@ -1,7 +1,7 @@
 #include "clientmanager.h"
 #include <QDebug>
 
-              ClientManager::ClientManager(QObject *parent) : QObject(parent) {
+ClientManager::ClientManager(QObject *parent) : QObject(parent) {
     socket = new QTcpSocket(this);
     connect(socket, &QTcpSocket::readyRead, this, &ClientManager::onReadyRead);
 
@@ -101,10 +101,26 @@ void ClientManager::processMessage(const QString &message) {
         emit enemyShot(res["x"].toInt(), res["y"].toInt(), res["hit"].toBool(), res["sunk"].toBool());
     }
     else if (cmd == "GAME_OVER") {
-        emit gameOver(data, "");
-        emit messageReceived("Game Over: " + data);
+        QString winner;
+        QString stats;
+
+        if (data.contains("|")) {
+            QStringList parts = data.split("|");
+            for (const QString& part : parts) {
+                if (part.startsWith("WINNER:")) {
+                    winner = part.mid(7);
+                } else if (part.startsWith("STATS:")) {
+                    stats = part.mid(6);
+                }
+            }
+        } else {
+            winner = data;
+        }
+
+        emit gameOver(winner, stats);
+        emit messageReceived("GAME OVER! Winner: " + winner);
+        emit messageReceived(stats);
     }
-    else if (cmd == "STATS") emit gameOver("", data);
     else if (cmd == "ERROR") emit errorOccurred(data);
     else {
         qDebug() << "Unknown command:" << cmd;
