@@ -40,6 +40,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     client = new ClientManager(this);
     shotsMade.clear();
+    gameFinished = false;
+    restartRequested = false;
 
     connect(btnConnect, &QPushButton::clicked, this, &MainWindow::onConnect);
     connect(btnReady, &QPushButton::clicked, this, &MainWindow::onReady);
@@ -52,20 +54,37 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(client, &ClientManager::enemyShot, this, &MainWindow::onEnemyShot);
     connect(client, &ClientManager::gameOver, this, &MainWindow::onGameOver);
     connect(client, &ClientManager::errorOccurred, this, &MainWindow::onError);
+    connect(client, &ClientManager::errorOccurred, this, &MainWindow::onError);
 }
 
 void MainWindow::onStatusChanged(const QString &status) {
     statusLabel->setText("Status: " + status);
     qDebug() << "Status changed to:" << status;
 
-    if (status == "PLACING_SHIPS") {
+    if (status == "WAITING") {
+        myField->setInteractive(false);
+        enemyField->setInteractive(false);
+        btnReady->setEnabled(false);
+        shotsMade.clear();
+        myTurn = false;
+        log->append("Waiting for another player...");
+    }
+    else if (status == "PLACING_SHIPS") {
         myField->setInteractive(true);
         enemyField->setInteractive(false);
         btnReady->setEnabled(true);
         shotsMade.clear();
+        myTurn = false;
+        gameFinished = false;
         log->append("Place your ships: 1x4, 2x3, 3x2, 4x1");
     }
     else if (status == "PLAYER1_TURN" || status == "PLAYER2_TURN") {
+    }
+    else if (status == "GAME_OVER") {
+        myField->setInteractive(false);
+        enemyField->setInteractive(false);
+        btnReady->setEnabled(false);
+        myTurn = false;
     }
     else {
         myField->setInteractive(false);
@@ -82,7 +101,8 @@ void MainWindow::onTurnChanged(const QString &currentPlayer) {
     if (isMyTurn) {
         log->append("<b>=== YOUR TURN ===</b>");
         enemyField->setInteractive(true);
-    } else {
+    }
+    else {
         log->append("=== OPPONENT TURN ===");
         enemyField->setInteractive(false);
     }
@@ -115,10 +135,12 @@ void MainWindow::onEnemyShot(int x, int y, bool hit, bool sunk) {
         myField->setCell(x, y, GameField::Hit);
         if (sunk) {
             log->append(QString("Your ship was sunk at (%1, %2)!").arg(x).arg(y));
-        } else {
+        }
+        else {
             log->append(QString("Your ship was hit at (%1, %2)!").arg(x).arg(y));
         }
-    } else {
+    }
+    else {
         myField->setCell(x, y, GameField::Miss);
         log->append(QString("Enemy missed at (%1, %2).").arg(x).arg(y));
     }
@@ -129,9 +151,13 @@ void MainWindow::onGameStarted(const QString &info) {
     myField->setInteractive(false);
     enemyField->setInteractive(false);
     shotsMade.clear();
+    gameFinished = false;
 }
 
 void MainWindow::onGameOver(const QString &winner, const QString &stats) {
+    if (gameFinished) return;
+    gameFinished = true;
+
     myTurn = false;
     enemyField->setInteractive(false);
     myField->setInteractive(false);
@@ -142,19 +168,44 @@ void MainWindow::onGameOver(const QString &winner, const QString &stats) {
     msgBox.setWindowTitle("Sea Battle");
     msgBox.setIcon(QMessageBox::Information);
 
+    QString winnerText;
     if (winner == nameEdit->text()) {
-        msgBox.setText("<h2>Congratulations! You`ve won!</h2>");
-    }
-    else {
-        msgBox.setText(QString("<h2> Winner -  %1</h2>").arg(winner));
+        winnerText = "<h2 style='color: green;'> VICTORY! You won! </h2>";
+    } else {
+        winnerText = QString("<h2 style='color: red;'> DEFEAT! Winner: %1 </h2>").arg(winner);
     }
 
-    msgBox.setInformativeText(stats);
-    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setText(winnerText);
+
+    QString formattedStats = "<div style='font-family: monospace; margin: 10px;'>";
+    QString statsCopy = stats;
+    formattedStats += statsCopy.replace("\n", "<br>");
+    formattedStats += "</div>";
+
+    msgBox.setInformativeText(formattedStats);
+
+    QPushButton *playAgainBtn = msgBox.addButton("Play Again", QMessageBox::AcceptRole);
+    QPushButton *quitBtn = msgBox.addButton("Quit", QMessageBox::RejectRole);
+    playAgainBtn->setStyleSheet("QPushButton { background-color: #4CAF50; color: white; padding: 8px; }");
+    quitBtn->setStyleSheet("QPushButton { background-color: #f44336; color: white; padding: 8px; }");
+
     msgBox.exec();
 
-    log->append("<b>Game over. Winner -  " + winner + "</b>");
+    if (msgBox.clickedButton() == playAgainBtn) {
+        log->append("Requesting game restart...");
+
+        client->sendCommand("RESTART");
+        QTimer::singleShot(1000, this, &MainWindow::restartGame);
+
+    } else if (msgBox.clickedButton() == quitBtn) {
+        log->append("Quitting game...");
+        QTimer::singleShot(500, this, [this]() {
+            this->close();
+        });
+    }
+
     btnConnect->setEnabled(true);
+    log->append("<b>=== Game Over ===");
 }
 
 void MainWindow::onError(const QString &error) {
@@ -175,12 +226,20 @@ void MainWindow::onConnect() {
         ipEdit->setText(ip);
     }
 
-    client->connectToServer(ip, 777, name);
-    btnConnect->setEnabled(false);
-    log->append("Connecting to server at " + ip + "...");
     myField->clear();
     enemyField->clear();
     shotsMade.clear();
+    myTurn = false;
+    gameFinished = false;
+    btnReady->setEnabled(false);
+    myField->setInteractive(false);
+    enemyField->setInteractive(false);
+    statusLabel->setText("Status: connecting...");
+    log->clear();
+
+    client->connectToServer(ip, 777, name);
+    btnConnect->setEnabled(false);
+    log->append("Connecting to server at " + ip + "...");
 }
 
 void MainWindow::onReady() {
@@ -227,4 +286,41 @@ void MainWindow::onShot(int x, int y) {
     client->sendCommand("SHOT", shot);
 
     log->append(QString("Shooting at (%1, %2)...").arg(x).arg(y));
+}
+MainWindow::~MainWindow() {
+    if (client) {
+        client->disconnectFromServer();
+    }
+}
+void MainWindow::closeEvent(QCloseEvent *event) {
+    if (client) {
+        client->disconnectFromServer();
+    }
+    event->accept();
+}
+void MainWindow::onGameReset() {
+    qDebug() << "Game reset handler called";
+    myField->clear();
+    enemyField->clear();
+    shotsMade.clear();
+    myTurn = false;
+    gameFinished = false;
+    myField->setInteractive(true);
+    enemyField->setInteractive(false);
+    btnReady->setEnabled(true);
+    btnConnect->setEnabled(false);
+
+    statusLabel->setText("Status: PLACING_SHIPS");
+    log->append("=== GAME RESET ===");
+    log->append("Place your ships again!");
+}
+void MainWindow::restartGame() {
+    qDebug() << "Restarting game...";
+    myField->clear();
+    enemyField->clear();
+    shotsMade.clear();
+    myTurn = false;
+    gameFinished = false;
+    log->append("=== Starting new game ===");
+    statusLabel->setText("Status: waiting for game restart...");
 }

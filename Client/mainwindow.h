@@ -1,6 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-
+#include <QTimer>
 #include <QMainWindow>
 #include <QPushButton>
 #include <QLineEdit>
@@ -15,6 +15,9 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
     MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
+protected:
+    void closeEvent(QCloseEvent *event) override;
 
 private slots:
     void onConnect();
@@ -27,6 +30,8 @@ private slots:
     void onGameStarted(const QString &info);
     void onGameOver(const QString &winner, const QString &stats);
     void onError(const QString &error);
+    void onGameReset();
+    void restartGame();
 
 private:
     ClientManager *client;
@@ -36,6 +41,8 @@ private:
     QPushButton *btnConnect, *btnReady;
     QLabel *statusLabel;
     bool myTurn = false;
+    bool gameFinished = false;
+    bool restartRequested = false;
     QSet<QPair<int, int>> shotsMade;
 };
 

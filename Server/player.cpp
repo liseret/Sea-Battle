@@ -128,6 +128,8 @@ void player::resetGameStats() {
     hits.clear();
     misses.clear();
     receivedHits.clear();
+    ships.clear();
+    shipsRemaining = 0;
     shotsFired = 0;
     shotsHit = 0;
     sunkShipsCount = 0;

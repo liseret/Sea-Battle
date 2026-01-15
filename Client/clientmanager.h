@@ -13,6 +13,7 @@ public:
     explicit ClientManager(QObject *parent = nullptr);
     void connectToServer(const QString &host, quint16 port, const QString &name);
     void sendCommand(const QString &command, const QJsonValue &data = QJsonValue());
+    void disconnectFromServer();
 
 signals:
     void statusChanged(const QString &status);
@@ -24,6 +25,7 @@ signals:
     void shipSunk(const QString &msg);
     void gameOver(const QString &winner, const QString &stats);
     void errorOccurred(const QString &error);
+    void gameReset();
 
 private slots:
     void onReadyRead();

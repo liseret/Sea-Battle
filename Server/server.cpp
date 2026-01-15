@@ -220,15 +220,21 @@ void server::handleGameCommand(QTcpSocket* client, const QString& command, const
         }
     }
     else if (command == "RESTART") {
-        if (gameStatus == "GAME_OVER") {
-            for (auto p : players.values()) {
-                p->resetGameStats();
-                p->setReady(false);
-            }
+        qDebug() << "Restart requested by:" << Player->getUsername();
+        gameStatus = "WAITING";
+        currentPlayerUsername.clear();
+        for (auto p : players.values()) {
+            p->resetGameStats();
+            p->clearShips();
+            p->setReady(false);
+        }
+        broadcast("RESET");
+        broadcast("STATUS", "WAITING");
+        broadcast("MESSAGE", "Game restarted. Waiting for players...");
+        if (connectedPlayers == 2) {
             gameStatus = "PLACING_SHIPS";
-            currentPlayerUsername.clear();
-            broadcast("GAME_RESTART");
             broadcast("STATUS", "PLACING_SHIPS");
+            broadcast("MESSAGE", "Both players ready! Place your ships.");
         }
     }
 }

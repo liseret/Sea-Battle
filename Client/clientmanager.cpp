@@ -121,8 +121,25 @@ void ClientManager::processMessage(const QString &message) {
         emit messageReceived("GAME OVER! Winner: " + winner);
         emit messageReceived(stats);
     }
-    else if (cmd == "ERROR") emit errorOccurred(data);
+    else if (cmd == "RESET") {
+        emit gameReset();
+        emit messageReceived("=== GAME RESET ===");
+        emit messageReceived("Game has been reset. Ready for new game!");
+        qDebug() << "Game reset received from server";
+    }
+    else if (cmd == "ERROR") {
+        emit errorOccurred(data);
+    }
     else {
         qDebug() << "Unknown command:" << cmd;
     }
+}
+void ClientManager::disconnectFromServer() {
+    if (socket && socket->state() == QAbstractSocket::ConnectedState) {
+        socket->disconnectFromHost();
+        if (socket->state() != QAbstractSocket::UnconnectedState) {
+            socket->waitForDisconnected(1000);
+        }
+    }
+    nextBlockSize = 0;
 }
