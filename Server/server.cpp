@@ -153,7 +153,7 @@ void server::handleGameCommand(QTcpSocket* client, const QString& command, const
         int y = shotObj["y"].toInt();
 
         if (Player->hasShotAt(x, y)) {
-            sendToClient(client, "ERROR", "Вы уже стреляли в эту клетку");
+            sendToClient(client, "ERROR", "You've already shot at this cage");
             return;
         }
 
@@ -346,7 +346,7 @@ void server::endGame(player* winner) {
         statsData += QString("Shots were fired: %1<br>").arg(total);
         statsData += QString("Hits: %1<br>").arg(hits);
         statsData += QString("Misses: %1<br>").arg(total - hits);
-        statsData += QString("Accuracy: %1%<br><br>").arg(QString::number(acc, 'f', 1));
+        statsData += QString("Accuracy: %1%<br>").arg(QString::number(acc, 'f', 1));
         statsData += QString("Ships sunk: <b>%1</b> out of 10<br>").arg(sunk);
     }
 
