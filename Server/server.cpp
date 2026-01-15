@@ -382,7 +382,13 @@ void server::switchTurn() {
     player* currentPlayer = getPlayerByUsername(currentPlayerUsername);
     if (!currentPlayer) return;
 
-    player* nextPlayer = (playerList[0] == currentPlayer) ? playerList[1] : playerList[0];
+    player* nextPlayer;
+    if (playerList[0] == currentPlayer) {
+        nextPlayer = playerList[1];
+    }
+    else {
+        nextPlayer = playerList[0];
+    }
 
     currentPlayerUsername = nextPlayer->getUsername();
     if (gameStatus == "PLAYER1_TURN") {
@@ -409,8 +415,6 @@ QString server::getPlayerStats(player* p) {
     else {
         accuracy = 0.0;
     }
-    // player* opponent = getOpponent(p);
-    // int sunkShips = 10 - opponent->getShipsRemaining();
     int sunk = p->getSunkShips();
 
     QString stats = QString("Player: %1\n").arg(p->getUsername());
