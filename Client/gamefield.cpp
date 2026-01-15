@@ -6,7 +6,11 @@ GameField::GameField(QWidget *parent) : QWidget(parent) {
 }
 
 void GameField::clear() {
-    for(int i=0; i<10; ++i) for(int j=0; j<10; ++j) grid[i][j] = Empty;
+    for(int i=0; i<10; ++i){
+        for(int j=0; j<10; ++j){
+            grid[i][j]=Empty;
+        }
+    }
     selectedCells.clear();
     update();
 }
@@ -30,8 +34,12 @@ void GameField::paintEvent(QPaintEvent *) {
     for(int x=0; x<10; ++x) {
         for(int y=0; y<10; ++y) {
             QRect rect(x*step+1, y*step+1, step-1, step-1);
-            if (grid[x][y] == Ship) p.fillRect(rect, Qt::gray);
-            else if (grid[x][y] == Hit) p.fillRect(rect, Qt::red);
+            if (grid[x][y] == Ship){
+                p.fillRect(rect, Qt::gray);
+            }
+            else if (grid[x][y] == Hit){
+                p.fillRect(rect, Qt::red);
+            }
             else if (grid[x][y] == Miss) {
                 p.setBrush(Qt::blue);
                 p.drawEllipse(rect.center(), 3, 3);
@@ -41,7 +49,9 @@ void GameField::paintEvent(QPaintEvent *) {
 }
 
 void GameField::mousePressEvent(QMouseEvent *event) {
-    if (!interactive) return;
+    if (!interactive) {
+        return;
+    }
     int x = event->x() / 30;
     int y = event->y() / 30;
     if (x < 10 && y < 10) {
